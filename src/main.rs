@@ -1,6 +1,7 @@
 use bevy::{
     color::palettes::tailwind::SLATE_900,  prelude::*, text::TextLayoutInfo
 };
+#[cfg(not(target_arch = "wasm32"))]
 use bevy_tokio_tasks::TokioTasksPlugin;
 mod bingo;
 mod loader;
@@ -8,13 +9,19 @@ mod server;
 mod text;
 mod text_spawner;
 mod countdown;
+#[cfg(target_arch = "wasm32")]
+mod web;
 use loader::{Config, TextSource, PresetManager};
 use bingo::BingoState;
 use countdown::CountdownTimer;
 
 fn main() {
+    #[cfg(not(target_arch = "wasm32"))]
     let preset_manager: PresetManager = loader::unwrap_all_presets();
+    #[cfg(not(target_arch = "wasm32"))]
     let conf: Config = loader::unwrap_conf();
+    #[cfg(target_arch = "wasm32")]
+    let Some((preset_manager, conf)): Option<(PresetManager, Config)> = web::load_ebb() else { return };
     
     // デフォルトのプリセット（最初に見つかったもの、またはdefault）を取得
     let default_preset_name = preset_manager.presets.keys().next().cloned()
@@ -29,10 +36,16 @@ fn main() {
         }]);
     
     let mut app = App::new();
-    app.add_plugins(TokioTasksPlugin::default())
+    #[cfg(not(target_arch = "wasm32"))]
+    app.add_plugins(TokioTasksPlugin::default());
+    app
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 decorations: false,
+                #[cfg(target_arch = "wasm32")]
+                canvas: Some("#nexboard".to_string()),
+                #[cfg(target_arch = "wasm32")]
+                resolution: web::window_resolution(&conf),
                 ..default()
             }),
             ..default()
@@ -62,6 +75,8 @@ fn main() {
     
     // WebSocketサーバーをセットアップ
     server::setup_websocket_server(&mut app);
+    #[cfg(target_arch = "wasm32")]
+    web::setup(&mut app);
     
     app.run();
 }

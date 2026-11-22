@@ -1,4 +1,5 @@
 use crate::{Fonts, LoopingText, ScrollingSpeed, ScrollingState, Showing, TextQueue, TextScroll, loader::Config, server::{BulletinResponse, WebSocketChannel, WsResponse}};
+#[cfg(not(target_arch = "wasm32"))]
 use axum::http::response;
 use bevy::{
     camera::visibility::NoFrustumCulling,

@@ -1,10 +1,13 @@
+#[cfg(not(target_arch = "wasm32"))]
 use axum::{
     Extension, Router, extract::ws::{Message, WebSocket, WebSocketUpgrade}, response::IntoResponse, routing::get
 };
+#[cfg(not(target_arch = "wasm32"))]
 use bevy_tokio_tasks::TokioTasksRuntime;
 use bevy::prelude::*;
 use tokio::sync::{mpsc, broadcast};
 use serde::{Deserialize, Serialize};
+#[cfg(not(target_arch = "wasm32"))]
 use futures_util::{SinkExt, StreamExt};
 
 use crate::bingo::BingoState;
@@ -116,10 +119,12 @@ pub fn setup_websocket_server(app: &mut App) {
         sender: response_tx,
     });
     
+    #[cfg(not(target_arch = "wasm32"))]
     app.add_systems(Startup, start_axum_server);
     app.add_systems(Update, handle_websocket_commands);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn start_axum_server(
     runtime: Res<TokioTasksRuntime>,
     command_sender: Res<CommandSender>,
@@ -146,6 +151,7 @@ fn start_axum_server(
     });
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 async fn ws_handler(
     ws: WebSocketUpgrade,
     Extension(command_tx): Extension<mpsc::Sender<WsCommand>>,
@@ -154,6 +160,7 @@ async fn ws_handler(
     ws.on_upgrade(move |socket| handle_websocket(socket, command_tx, response_tx))
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 async fn handle_websocket(
     socket: WebSocket,
     command_tx: mpsc::Sender<WsCommand>,

@@ -1,0 +1,3 @@
+# wasm32 のときだけ getrandom の wasm_js バックエンドを有効にする（rand 用）
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
